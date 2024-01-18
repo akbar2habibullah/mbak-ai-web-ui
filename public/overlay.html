@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Mbak AI Web UI</title>
+
+		<style>
+      body {
+			    min-width: 200px !important;
+			}
+
+			.usernamelink {
+			    color: rgb(102, 143, 217) !important;
+			}
+
+			::-webkit-scrollbar {
+			    width: 0px;
+			    height: 0px;
+			}
+
+			.eventcontainer > div {
+			    margin-top: 5px;
+			}
+		</style>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+			window.settings = Object.fromEntries(new URLSearchParams(location.search));
+
+			window.addEventListener('load', () => {
+			    if (window.settings.fontColor) {
+			        $('body').css('color', window.settings.fontColor);
+			    }
+
+			    if (window.settings.bgColor) {
+			        $('body').css('background-color', window.settings.bgColor);
+			    }
+
+			    if (window.settings.fontSize) {
+			        $('body').css('font-size', window.settings.fontSize);
+			    }
+			})
+		</script>
+
+		<script type="importmap">
+			{
+			  "imports": {
+			    "@google/generative-ai": "https://esm.run/@google/generative-ai"
+			  }
+			}
+		</script>
+
+		<script type="module">
+			import easySpeech from "https://cdn.jsdelivr.net/npm/easy-speech/+esm"
+			class TikTokIOConnection {
+				constructor(backendUrl) {
+					this.socket = io(backendUrl)
+					this.uniqueId = null
+					this.options = null
+
+					this.socket.on("connect", () => {
+						console.info("Socket connected!")
+
+						// Reconnect to streamer if uniqueId already set
+						if (this.uniqueId) {
+							this.setUniqueId()
+						}
+					})
+
+					this.socket.on("disconnect", () => {
+						console.warn("Socket disconnected!")
+					})
+
+					this.socket.on("streamEnd", () => {
+						console.warn("LIVE has ended!")
+						this.uniqueId = null
+					})
+
+					this.socket.on("tiktokDisconnected", (errMsg) => {
+						console.warn(errMsg)
+						if (errMsg && errMsg.includes("LIVE has ended")) {
+							this.uniqueId = null
+						}
+					})
+				}
+
+				connect(uniqueId, options) {
+					this.uniqueId = uniqueId
+					this.options = options || {}
+
+					this.setUniqueId()
+
+					return new Promise((resolve, reject) => {
+						this.socket.once("tiktokConnected", resolve)
+						this.socket.once("tiktokDisconnected", reject)
+
+						setTimeout(() => {
+							reject("Connection Timeout")
+						}, 15000)
+					})
+				}
+
+				setUniqueId() {
+					this.socket.emit("setUniqueId", this.uniqueId, this.options)
+				}
+
+				on(eventName, eventHandler) {
+					this.socket.on(eventName, eventHandler)
+				}
+			}
+
+			// This will use the demo backend if you open index.html locally via file://, otherwise your server will be used
+			let backendUrl = location.protocol === "file:" ? "https://tiktok-chat-reader.zerody.one/" : "http://localhost:8081/"
+			let connection = new TikTokIOConnection(backendUrl)
+			import { GoogleGenerativeAI } from "@google/generative-ai"
+
+			// Counter
+			let viewerCount = 0
+			let likeCount = 0
+			let diamondsCount = 0
+			let gapTime = 0
+			let speaking = false
+
+			let apikey = ''
+
+			let roomId
+			let history = {
+				arr: [],
+				last: "",
+			}
+
+			function removeNewlines(s) {
+				return s.replace(/\*/g, "")
+			}
+
+			let genAI
+			let model
+
+			// These settings are defined by obs.html
+			if (!window.settings) window.settings = {}
+
+			$(document).ready(() => {
+				$("#connectButton").click(connect)
+				$("#uniqueIdInput").on("keyup", function (e) {
+					if (e.key === "Enter") {
+						connect()
+					}
+				})
+
+				if (window.settings.username) connect()
+			})
+
+			function connect() {
+				let uniqueId = window.settings.username || $("#uniqueIdInput").val()
+
+				let apiKey = window.settings.apikey
+
+				if (apiKey !== "") {
+					genAI = new GoogleGenerativeAI(apiKey)
+					model = genAI.getGenerativeModel({ model: "gemini-pro" })
+				} else {
+					alert("No API Key entered")
+				}
+				
+				if (uniqueId !== "") {
+					$("#stateText").text("Connecting...")
+
+					connection
+						.connect(uniqueId, {
+							enableExtendedGiftInfo: true,
+						})
+						.then((state) => {
+							$("#stateText").text(`Connected to roomId ${state.roomId}`)
+
+							roomId = state.roomId
+
+							// reset stats
+							viewerCount = 0
+							likeCount = 0
+							diamondsCount = 0
+							updateRoomStats()
+						})
+						.catch((errorMessage) => {
+							$("#stateText").text(errorMessage)
+
+							// schedule next try if obs username set
+							if (window.settings.username) {
+								setTimeout(() => {
+									connect(window.settings.username)
+								}, 30000)
+							}
+						})
+				} else {
+					alert("no username entered")
+				}
+			}
+
+			// Prevent Cross site scripting (XSS)
+			function sanitize(text) {
+				return text.replace(/</g, "&lt;")
+			}
+
+			function updateRoomStats() {
+				$("#roomStats").html(`Viewers: <b>${viewerCount.toLocaleString()}</b> Likes: <b>${likeCount.toLocaleString()}</b> Earned Diamonds: <b>${diamondsCount.toLocaleString()}</b>`)
+			}
+
+			function generateUsernameLink(data) {
+				return `<a class="usernamelink" href="https://www.tiktok.com/@${data.uniqueId}" target="_blank">${data.uniqueId}</a>`
+			}
+
+			function isPendingStreak(data) {
+				return data.giftType === 1 && !data.repeatEnd
+			}
+
+			function getCount(str) {
+				return str.split(" ").filter(function (num) {
+					return num != ""
+				}).length
+			}
+
+			setInterval(async () => {
+				console.log(gapTime)
+				if (history.last !== "" && !speaking) {
+					let messages = []
+
+					if (!history[roomId]) {
+						messages = [
+							{
+								role: "user",
+								parts: `You are a chatbot assistant to be moderator in ${window.settings.name}'s TikTok Live. ${window.settings.name} currently have casual game livestream in TikTok, playing ${window.settings.gamename}. ${window.settings.name}'s are Indonesian so his viewer is mostly comment with casual Indonesian language. Just try to answer most of them naturally as "Netizen Indonesia". You can try to use local jokes and context to be more friendly and natural. Try to be authentic as possible, avoid verbosity and offensive sentences. Just answer with small sentences. Before each messages, theres's also username to know which person is sending the comments. Don't try to provide crucial information regarding ${window.settings.name} outside this context, chit-chat is fine, but misinformation is not. You don't have to repeat the comment or message from viewers. Just give your respond. Avoid talking about sensitive topic that leads to community violation in TikTok like Gambling, Adult content, and moral sensitive issue.${window.settings.context ? `
+								
+								There's also additional context below. You don't have to always use it unless it's neccesary. The context is below:
+								
+								${window.settings.context}` : ''}`,
+							},
+							{ role: "model", parts: `Baik, instruksi sudah jelas!` },
+						]
+					} else if (history[roomId].length % 16 === 0) {
+						messages = [
+							...history[roomId],
+							{
+								role: "user",
+								parts: `This is repeatable system prompt to stay inline with the instruction and character. You are a chatbot assistant to be moderator in ${window.settings.name}'s TikTok Live. ${window.settings.name} currently have casual game livestream in TikTok, playing ${window.settings.gamename}. ${window.settings.name}'s are Indonesian so his viewer is mostly comment with casual Indonesian language. Just try to answer most of them naturally as "Netizen Indonesia". You can try to use local jokes and context to be more friendly and natural. Try to be authentic as possible, avoid verbosity and offensive sentences. Just answer with small sentences. Before each messages, theres's also username to know which person is sending the comments. Don't try to provide crucial information regarding ${window.settings.name} outside this context, chit-chat is fine, but misinformation is not. You don't have to repeat the comment or message from viewers. Just give your respond. Avoid talking about sensitive topic that leads to community violation in TikTok like Gambling, Adult content, and moral sensitive issue.${window.settings.context ? `
+								
+								There's also additional context below. You don't have to always use it unless it's neccesary. The context is below:
+								
+								${window.settings.context}` : ''}`,
+							},
+							{ role: "model", parts: `Baik, instruksi sudah jelas!` },
+						]
+					} else {
+						messages = [...history[roomId]]
+					}
+
+					const chat = model.startChat({
+						history: messages,
+						generationConfig: {
+							maxOutputTokens: 200,
+						},
+					})
+
+					const result = await chat.sendMessage(history.last)
+					const response = await result.response
+					const textResponse = removeNewlines(response.text())
+
+					console.log(textResponse)
+
+					history[roomId] = [...messages, { role: "user", parts: history.last }, { role: "model", parts: textResponse }]
+
+					await addChatItemByBot("", textResponse)
+
+					history.last = ""
+
+					await easySpeech.init()
+
+					const voices = await easySpeech.voices()
+
+					await easySpeech.speak({
+						text: textResponse,
+						voice: voices[11], // optional, will use a default or fallback
+						pitch: 1,
+						rate: 1,
+						volume: 1.5,
+						// there are more events, see the API for supported events
+						boundary: (e) => console.debug("boundary reached"),
+						start: () => {
+							speaking = true
+							gapTime = 1
+						},
+						end: () => {
+							speaking = false
+							gapTime = 0
+						},
+					})
+				} else {
+					gapTime -= 1
+				}
+			}, 10000)
+
+			async function addChatItemByBot(color, text, summarize) {
+				let container = location.href.includes("overlay.html") ? $(".eventcontainer") : $(".chatcontainer")
+
+				if (container.find("div").length > 500) {
+					container.find("div").slice(0, 200).remove()
+				}
+
+				try {
+					container.find(".temporary").remove()
+
+					container.append(`
+			            <div class=${summarize ? "temporary" : "static"} style="display: flex;">
+											<div>
+												<img id="myGif" src="./mbak0.gif" style="width: 200px;"/>
+											</div>
+			                <div style="display: flex; flex-direction: column; justify-content: center;">
+													<span>
+														<b>Mbak AI:</b>
+														<span style="color:${color}">${sanitize(text)}</span>
+													</span>
+			                </div>
+			            </div>
+									<hr />
+			        `)
+				} catch (err) {
+					console.log(err)
+				}
+
+				container.stop()
+				window.scrollTo(0, document.body.scrollHeight);
+			}
+
+			/**
+			 * Add a new message to the chat container
+			 */
+			async function addChatItem(color, data, text, summarize) {
+				const prompt = text
+				const user = data.uniqueId
+				if ( user !== window.settings.username ) {
+					history.last += `${user} berkomentar: ${prompt}.\n`
+				} else {
+					history.last += `(${window.settings.name} ikut nimbrung di kolom chat): ${prompt}.`
+				}
+			}
+
+      async function addChatSocialItem(color, data, text, summarize) {
+				const prompt = text
+				const user = data.uniqueId
+				history.last += `${user}: ${prompt}.\n`
+			}
+
+			/**
+			 * Add a new gift to the gift container
+			 */
+			function addGiftItem(data) {
+				const user = data.uniqueId
+				history.last += `${user} ngasih gift sejumlah ${(data.diamondCount * data.repeatCount).toLocaleString()} Coin.\n`
+
+			}
+
+			// viewer stats
+			connection.on("roomUser", (msg) => {
+				if (typeof msg.viewerCount === "number") {
+					viewerCount = msg.viewerCount
+					updateRoomStats()
+				}
+			})
+
+			// like stats
+			connection.on("like", (msg) => {
+				if (typeof msg.totalLikeCount === "number") {
+					likeCount = msg.totalLikeCount
+					updateRoomStats()
+				}
+
+				if (window.settings.showLikes === "0") return
+
+				if (typeof msg.likeCount === "number") {
+					if (gapTime < -3) history.last += `${msg.uniqueId} memberi likes.\n`
+				}
+			})
+
+			// Member join
+			let joinMsgDelay = 0
+			connection.on("member", (msg) => {
+				if (window.settings.showJoins === "0") return
+
+				let addDelay = 250
+				if (joinMsgDelay > 500) addDelay = 100
+				if (joinMsgDelay > 1000) addDelay = 0
+
+				joinMsgDelay += addDelay
+
+				setTimeout(() => {
+					joinMsgDelay -= addDelay
+					if (gapTime < -2) history.last += `${msg.uniqueId} join live room.\n`
+				}, joinMsgDelay)
+			})
+
+			// New chat comment received
+			connection.on("chat", (msg) => {
+				if (window.settings.showChats === "0") return
+
+				addChatItem("", msg, msg.comment)
+			})
+
+			// New gift received
+			connection.on("gift", (data) => {
+				if (!isPendingStreak(data) && data.diamondCount > 0) {
+					diamondsCount += data.diamondCount * data.repeatCount
+					updateRoomStats()
+				}
+
+				if (window.settings.showGifts === "0") return
+
+				addGiftItem(data)
+			})
+
+			// share, follow
+			connection.on("social", (data) => {
+				if (window.settings.showFollows === "0") return
+
+				let color = data.displayType.includes("follow") ? "#ff005e" : "#2fb816"
+				addChatSocialItem(color, data, data.label.replace("{0:user}", ""))
+			})
+
+			connection.on("streamEnd", () => {
+				$("#stateText").text("Stream ended.")
+
+				console.log(history)
+
+				// schedule next try if obs username set
+				if (window.settings.username) {
+					setTimeout(() => {
+						connect(window.settings.username)
+					}, 30000)
+				}
+			})
+		</script>
+
+		<div class="eventcontainer"></div>
+		
+	</body>
+</html>

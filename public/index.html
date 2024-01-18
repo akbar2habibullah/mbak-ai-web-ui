@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Mbak AI Web UI</title>
+
+		<style>
+			body {
+			    font-family: Arial, Helvetica, sans-serif;
+			    min-width: 800px;
+			    background-color: rgb(0, 0, 0,0);
+			}
+
+			h1 {
+			    font-size: 1.8em;
+			    margin-top: 0px;
+			    margin-bottom: 0px;
+			}
+
+			a {
+			    color: #58a6ff;
+			}
+
+			.head {
+			    margin-bottom: 15px;
+			}
+
+			.subTitle {
+			    font-size: 0.8em;
+			    font-weight: bold;
+			}
+
+			.usernamelink {
+			    color: #18508f;
+			    text-decoration: none;
+			}
+
+			#roomUserText {
+			    width: 100%;
+			    text-align: right;
+			}
+
+			#roomStats {
+			    width: 100%;
+			    text-align: right;
+			}
+
+			#roomStats b {
+			    margin-right: 20px;
+			}
+
+			.splitchattable, .splitstatetable {
+			    width: 100%;
+			}
+
+			.splitstatetable td {
+			    width: 50%;
+			}
+
+			.containerheader {
+			    text-align: center;
+			}
+
+			.chatcontainer, .giftcontainer, .eventcontainer {
+			    overflow-y: scroll;
+			    height: calc(100vh - 240px);
+			    word-wrap: break-word;
+			}
+
+			.eventcontainer {
+			    height: calc(100vh - 90px);
+			}
+
+			.chatcontainer {
+			    min-width: 400px;
+			    max-width: calc(100vw - 430px);
+			}
+
+			.giftcontainer {
+			    min-width: 400px;
+			}
+
+			.miniprofilepicture {
+			    height: 20px;
+			    width: 20px;
+			}
+
+			.gifticon {
+			    height: 50px;
+			    width: 50px;
+			    margin-right: 10px;
+			}
+		</style>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+		<script>
+			async function generateOverlay() {
+					let apikey = $('#apiIdInput').val()
+			    let username = $('#uniqueIdInput').val();
+			    let gamename = $('#gameNameInput').val();
+			    let name = $('#nameInput').val();
+					let context = $('#contextInput').val()
+			    let url = `http://localhost:8081/overlay.html?apikey=${apikey}&username=${username}&gamename=${gamename}&name=${name}&context=${context}&showLikes=1&showChats=1&showGifts=1&showFollows=1&showJoins=1&bgColor=rgb(255,255,255, 0.5)&fontColor=rgb(0,0,0)&fontSize=3em`;
+
+			    if(username && gamename && name && apikey) {
+			      try {
+			        await window.open(url, '_blank');
+			      } catch (err) {
+			        alert('Failed to copy: ', err);
+			      }
+			    } else {
+			      alert("Masukin semua info yang wajib dulu ya!");
+			    }
+			}
+		</script>
+	</head>
+	<body>
+		<div class="head">
+			<h1>Mbak AI Web UI</h1>
+			<span class="subTitle">Teman Livestream TikTok Favoritmu 🫶</span>
+			<span class="subTitle">Cek di GitHub Bang Habib ya untuk update terbaru terkait Mbak AI: <a href="https://github.com/akbar2habibullah/mbak-ai-web-ui" target="_blank">https://github.com/akbar2habibullah/mbak-ai-web-ui</a>. Boleh follow sekalian <a href="https://www.tiktok.com/@chavyv.akvar" target="_blank">TikTok bang Habib</a> untuk support sesama konten kreator TikTok, terimakasih 🙏😊</span>
+		</div>
+
+		<div class="inputFields">
+			<p>Masukin API key dari <a href="https://ai.google.dev/" target="_blank">Google</a> disini ya ☁️</p>
+			<input type="text" id="apiIdInput" />
+		</div>
+
+		<div class="inputFields">
+			<p>Kasih tau <b>username</b> TikTok Kamu ya, supaya mbak AI bisa mampir 🤗</p>
+			<input type="text" id="uniqueIdInput" />
+		</div>
+
+		<div class="inputFields">
+			<p>Kasih tau kamu streaming game apa, biar Mbak AI nyesuaiin konteks 😎</p>
+			<input type="text" id="gameNameInput" />
+		</div>
+
+		<div class="inputFields">
+			<p>Isi nama panggilan kamu disini ya, supaya Mbak AI panggil namamu di livestream dengan nama yang sesuai. Boleh tulis "bang", "mbak", atau "kak" di depan nya juga ya, supaya ga salah sebut. Hehe</p>
+			<input type="text" id="nameInput" />
+		</div>
+
+		<div class="inputFields">
+			<p>(opsional) Kamu boleh isi konteks tambahan disini dalam bahasa Inggris supaya Mbak AI ga ngasih misinformasi terkait kamu dan livestream kamu ya!</p>
+			<textarea rows="4" cols="100" id="contextInput" placeholder="(Tulis maksimal 4000 kata ya soalnya mbak AI gabisa inget banyak-banyak 😓)"></textarea>
+		</div>
+
+		<div class="inputFields">
+			<p>
+				Kalau sudah diisi semua,
+				<a href="#" onclick="generateOverlay()">Klik disini ya kalau mau generate link window chat Mbak AI 😊</a>
+			</p>
+		</div>
+	</body>
+</html>
