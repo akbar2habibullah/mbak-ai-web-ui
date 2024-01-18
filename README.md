@@ -37,6 +37,8 @@ Untuk tutorial lebih lanjut, request update fitur, atau sekedar support Bang Hab
 
 [https://www.tiktok.com/@chavyv.akvar](https://www.tiktok.com/@chavyv.akvar)
 
-Untuk yang mau support lewat saweria juga boleh, terimakasih 🙏😇
+Untuk yang mau support lewat saweria juga boleh:
 
 [https://saweria.co/akbar2habibullah](https://saweria.co/akbar2habibullah)
+
+Terimakasih 🙏😇
