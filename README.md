@@ -10,6 +10,12 @@ https://github.com/akbar2habibullah/mbak-ai-web-ui/assets/77200077/8f769ba4-8cff
 
 Untuk bisa jalanin program Mbak AI di livestream kamu secara gratis. Ikutin cara ini ya:
 
+### Download Project GitHub ini
+
+Bisa dengan klik tombol clone diatas, terus pilih ZIP file.
+
+Atau klik aja [link](https://github.com/akbar2habibullah/mbak-ai-web-ui/archive/refs/heads/main.zip) ini.
+
 ### Install program-program berikut
 
 **Browser:** [Chrome](https://www.google.com/chrome/) (Harus Chrome)
@@ -20,7 +26,7 @@ Untuk bisa jalanin program Mbak AI di livestream kamu secara gratis. Ikutin cara
 
 **API Key:** [Google Gemini Pro](https://ai.google.dev/) (Bukan instalasi program, tapi penting. Tenang, masih dikasih akses gratis sama Google kok)
 
-### Terus run dengan jalanin command prompt ini di CMD atau Terminal
+### Terus run dengan jalanin command prompt di dalam folder project yang tadi sudah di download lewat CMD atau Terminal
 
 ```bash
   npm install
