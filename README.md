@@ -14,7 +14,7 @@ Untuk bisa jalanin program Mbak AI di livestream kamu secara gratis. Ikutin cara
 
 **Browser:** [Chrome](https://www.google.com/chrome/) (Harus Chrome)
 
-**Server Runtime:** [Node JS](https://nodejs.org/en)
+**Server Runtime:** [Node JS](https://nodejs.org/en) (Pilih aja versi LTS)
 
 **Livestream App:** [TikTok Live Studio](https://www.tiktok.com/studio/download) atau [OBS](https://obsproject.com/)
 
