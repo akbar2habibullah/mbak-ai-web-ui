@@ -16,7 +16,7 @@ Untuk bisa jalanin program Mbak AI di livestream kamu secara gratis. Ikutin cara
 
 **Server Runtime:** [Node JS](https://nodejs.org/en)
 
-**Livestream App:** [TikTok Live Studio](https://www.tiktok.com/studio/download) atau [OBS]([https://nodejs.org/en](https://obsproject.com/))
+**Livestream App:** [TikTok Live Studio](https://www.tiktok.com/studio/download) atau [OBS](https://obsproject.com/)
 
 **API Key:** [Google Gemini Pro](https://ai.google.dev/) (Bukan instalasi program, tapi penting)
 
