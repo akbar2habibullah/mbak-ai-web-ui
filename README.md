@@ -18,7 +18,7 @@ Untuk bisa jalanin program Mbak AI di livestream kamu secara gratis. Ikutin cara
 
 **Livestream App:** [TikTok Live Studio](https://www.tiktok.com/studio/download) atau [OBS](https://obsproject.com/)
 
-**API Key:** [Google Gemini Pro](https://ai.google.dev/) (Bukan instalasi program, tapi penting)
+**API Key:** [Google Gemini Pro](https://ai.google.dev/) (Bukan instalasi program, tapi penting. Tenang, masih dikasih akses gratis sama Google kok)
 
 ### Terus run dengan jalanin command prompt ini di CMD atau Terminal
 
@@ -29,7 +29,7 @@ Untuk bisa jalanin program Mbak AI di livestream kamu secara gratis. Ikutin cara
   npm run start
 ```
 
-Setelah jalan, ada notifikasi bisa buka [http://localhost:8081](http://localhost:8081) di browser Chrome kamu. Disitu kamu bisa masukin info Livestream akun dan livestream kamu, jangan lupa masukin API Key yang di dapat dari [Google Gemini Pro](https://ai.google.dev/) juga ya.
+Setelah jalan, ada notifikasi bisa buka [http://localhost:8081](http://localhost:8081) di browser Chrome kamu. Disitu kamu bisa masukin info akun dan livestream kamu, jangan lupa masukin API Key yang di dapat dari [Google Gemini Pro](https://ai.google.dev/) juga ya.
 
 ## Support
 
