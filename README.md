@@ -12,7 +12,7 @@ Untuk bisa jalanin program Mbak AI di livestream kamu secara gratis. Ikutin cara
 
 ### Install program-program berikut
 
-**Browser:** [Chrome](https://www.google.com/chrome/)
+**Browser:** [Chrome](https://www.google.com/chrome/) (Harus Chrome)
 
 **Server Runtime:** [Node JS](https://nodejs.org/en)
 
