@@ -10,17 +10,23 @@ https://github.com/akbar2habibullah/mbak-ai-web-ui/assets/77200077/8f769ba4-8cff
 
 Untuk bisa jalanin program Mbak AI di livestream kamu secara gratis. Ikutin cara ini ya:
 
+### Download Project GitHub ini
+
+Bisa dengan klik tombol clone diatas, terus pilih ZIP file.
+
+Atau klik aja [link](https://github.com/akbar2habibullah/mbak-ai-web-ui/archive/refs/heads/main.zip) ini.
+
 ### Install program-program berikut
 
-**Browser:** [Chrome](https://www.google.com/chrome/)
+**Browser:** [Chrome](https://www.google.com/chrome/) (Harus Chrome)
 
-**Server Runtime:** [Node JS](https://nodejs.org/en)
+**Server Runtime:** [Node JS](https://nodejs.org/en) (Pilih aja versi LTS)
 
-**Livestream App:** [TikTok Live Studio](https://www.tiktok.com/studio/download) atau [OBS]([https://nodejs.org/en](https://obsproject.com/))
+**Livestream App:** [TikTok Live Studio](https://www.tiktok.com/studio/download) atau [OBS](https://obsproject.com/)
 
-**API Key:** [Google Gemini Pro](https://ai.google.dev/) (Bukan instalasi program, tapi penting)
+**API Key:** [Google Gemini Pro](https://ai.google.dev/) (Bukan instalasi program, tapi penting. Tenang, masih dikasih akses gratis sama Google kok)
 
-### Terus run dengan jalanin command prompt ini di CMD atau Terminal
+### Terus run dengan jalanin command prompt di dalam folder project yang tadi sudah di download lewat CMD atau Terminal
 
 ```bash
   npm install
@@ -29,7 +35,7 @@ Untuk bisa jalanin program Mbak AI di livestream kamu secara gratis. Ikutin cara
   npm run start
 ```
 
-Setelah jalan, ada notifikasi bisa buka [http://localhost:8081](http://localhost:8081) di browser Chrome kamu. Disitu kamu bisa masukin info Livestream akun dan livestream kamu, jangan lupa masukin API Key yang di dapat dari [Google Gemini Pro](https://ai.google.dev/) juga ya.
+Setelah jalan, ada notifikasi bisa buka [http://localhost:8081](http://localhost:8081) di browser Chrome kamu. Disitu kamu bisa masukin info akun dan livestream kamu, jangan lupa masukin API Key yang di dapat dari [Google Gemini Pro](https://ai.google.dev/) juga ya.
 
 ## Support
 
