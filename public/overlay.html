@@ -129,7 +129,17 @@
 
 			let roomId
 			let history = {
-				arr: [],
+				arr: [
+							{
+								role: "user",
+								parts: [{text: `You are a chatbot assistant to be moderator in ${window.settings.name}'s TikTok Live. ${window.settings.name} currently have casual game livestream in TikTok, playing ${window.settings.gamename}. ${window.settings.name}'s are Indonesian so his viewer is mostly comment with casual Indonesian language. Just try to answer most of them naturally as "Netizen Indonesia". You can try to use local jokes and context to be more friendly and natural. Try to be authentic as possible, avoid verbosity and offensive sentences. Just answer with small sentences. Before each messages, theres's also username to know which person is sending the comments. Don't try to provide crucial information regarding ${window.settings.name} outside this context, chit-chat is fine, but misinformation is not. You don't have to repeat the comment or message from viewers. Just give your respond. Avoid talking about sensitive topic that leads to community violation in TikTok like Gambling, Adult content, and moral sensitive issue.${window.settings.context ? `
+								
+								There's also additional context below. You don't have to always use it unless it's neccesary. The context is below:
+								
+								${window.settings.context}` : ''}` }] ,
+							},
+							{ role: "model", parts: [{text: `Baik, instruksi sudah jelas!` }]  },
+						],
 				last: "",
 			}
 
@@ -161,7 +171,7 @@
 
 				if (apiKey !== "") {
 					genAI = new GoogleGenerativeAI(apiKey)
-					model = genAI.getGenerativeModel({ model: "gemini-pro" })
+					model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 				} else {
 					alert("No API Key entered")
 				}
@@ -224,40 +234,11 @@
 
 			setInterval(async () => {
 				console.log(gapTime)
-				if (history.last !== "" && !speaking) {
-					let messages = []
-
-					if (!history[roomId]) {
-						messages = [
-							{
-								role: "user",
-								parts: `You are a chatbot assistant to be moderator in ${window.settings.name}'s TikTok Live. ${window.settings.name} currently have casual game livestream in TikTok, playing ${window.settings.gamename}. ${window.settings.name}'s are Indonesian so his viewer is mostly comment with casual Indonesian language. Just try to answer most of them naturally as "Netizen Indonesia". You can try to use local jokes and context to be more friendly and natural. Try to be authentic as possible, avoid verbosity and offensive sentences. Just answer with small sentences. Before each messages, theres's also username to know which person is sending the comments. Don't try to provide crucial information regarding ${window.settings.name} outside this context, chit-chat is fine, but misinformation is not. You don't have to repeat the comment or message from viewers. Just give your respond. Avoid talking about sensitive topic that leads to community violation in TikTok like Gambling, Adult content, and moral sensitive issue.${window.settings.context ? `
-								
-								There's also additional context below. You don't have to always use it unless it's neccesary. The context is below:
-								
-								${window.settings.context}` : ''}`,
-							},
-							{ role: "model", parts: `Baik, instruksi sudah jelas!` },
-						]
-					} else if (history[roomId].length % 16 === 0) {
-						messages = [
-							...history[roomId],
-							{
-								role: "user",
-								parts: `This is repeatable system prompt to stay inline with the instruction and character. You are a chatbot assistant to be moderator in ${window.settings.name}'s TikTok Live. ${window.settings.name} currently have casual game livestream in TikTok, playing ${window.settings.gamename}. ${window.settings.name}'s are Indonesian so his viewer is mostly comment with casual Indonesian language. Just try to answer most of them naturally as "Netizen Indonesia". You can try to use local jokes and context to be more friendly and natural. Try to be authentic as possible, avoid verbosity and offensive sentences. Just answer with small sentences. Before each messages, theres's also username to know which person is sending the comments. Don't try to provide crucial information regarding ${window.settings.name} outside this context, chit-chat is fine, but misinformation is not. You don't have to repeat the comment or message from viewers. Just give your respond. Avoid talking about sensitive topic that leads to community violation in TikTok like Gambling, Adult content, and moral sensitive issue.${window.settings.context ? `
-								
-								There's also additional context below. You don't have to always use it unless it's neccesary. The context is below:
-								
-								${window.settings.context}` : ''}`,
-							},
-							{ role: "model", parts: `Baik, instruksi sudah jelas!` },
-						]
-					} else {
-						messages = [...history[roomId]]
-					}
-
-					const chat = model.startChat({
-						history: messages,
+				console.log(history)
+				if (history.last.length > 0 && !speaking) {
+					if (history.last !==  history.arr[history.arr.length - 2]) {
+						const chat = model.startChat({
+						history: history.arr,
 						generationConfig: {
 							maxOutputTokens: 200,
 						},
@@ -267,14 +248,7 @@
 					const response = await result.response
 					const textResponse = removeNewlines(response.text())
 
-					console.log(textResponse)
-
-					history[roomId] = [...messages, { role: "user", parts: history.last }, { role: "model", parts: textResponse }]
-
 					await addChatItemByBot("", textResponse)
-
-					history.last = ""
-
 					await easySpeech.init()
 
 					const voices = await easySpeech.voices()
@@ -283,8 +257,8 @@
 						text: textResponse,
 						voice: voices[11], // optional, will use a default or fallback
 						pitch: 1,
-						rate: 1,
-						volume: 1.5,
+						rate: 1.1,
+						volume: 3,
 						// there are more events, see the API for supported events
 						boundary: (e) => console.debug("boundary reached"),
 						start: () => {
@@ -294,8 +268,16 @@
 						end: () => {
 							speaking = false
 							gapTime = 0
+							history.arr.push({ role: "user", parts: [{text: history.last }] })
+							history.arr.push({ role: "model", parts: [{text: textResponse }]  })
+							history.last = ""
 						},
 					})
+					} else {
+						history.last = ""
+						history.arr = history.arr.slice(0, history.arr.length - 2)
+						gapTime = - 1
+					}
 				} else {
 					gapTime -= 1
 				}
@@ -341,8 +323,6 @@
 				const user = data.uniqueId
 				if ( user !== window.settings.username ) {
 					history.last += `${user} berkomentar: ${prompt}.\n`
-				} else {
-					history.last += `(${window.settings.name} ikut nimbrung di kolom chat): ${prompt}.`
 				}
 			}
 
@@ -358,7 +338,6 @@
 			function addGiftItem(data) {
 				const user = data.uniqueId
 				history.last += `${user} ngasih gift sejumlah ${(data.diamondCount * data.repeatCount).toLocaleString()} Coin.\n`
-
 			}
 
 			// viewer stats
@@ -367,37 +346,6 @@
 					viewerCount = msg.viewerCount
 					updateRoomStats()
 				}
-			})
-
-			// like stats
-			connection.on("like", (msg) => {
-				if (typeof msg.totalLikeCount === "number") {
-					likeCount = msg.totalLikeCount
-					updateRoomStats()
-				}
-
-				if (window.settings.showLikes === "0") return
-
-				if (typeof msg.likeCount === "number") {
-					if (gapTime < -3) history.last += `${msg.uniqueId} memberi likes.\n`
-				}
-			})
-
-			// Member join
-			let joinMsgDelay = 0
-			connection.on("member", (msg) => {
-				if (window.settings.showJoins === "0") return
-
-				let addDelay = 250
-				if (joinMsgDelay > 500) addDelay = 100
-				if (joinMsgDelay > 1000) addDelay = 0
-
-				joinMsgDelay += addDelay
-
-				setTimeout(() => {
-					joinMsgDelay -= addDelay
-					if (gapTime < -2) history.last += `${msg.uniqueId} join live room.\n`
-				}, joinMsgDelay)
 			})
 
 			// New chat comment received
