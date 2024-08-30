@@ -219,7 +219,7 @@ io.on("connection", (socket) => {
 
 		// Connect to the given username (uniqueId)
 		try {
-			tiktokConnectionWrapper = new TikTokConnectionWrapper(uniqueId, options, true)
+			tiktokConnectionWrapper = new TikTokConnectionWrapper(uniqueId, true)
 			tiktokConnectionWrapper.connect()
 		} catch (err) {
 			socket.emit("tiktokDisconnected", err.toString())

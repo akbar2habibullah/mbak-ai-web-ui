@@ -132,9 +132,9 @@
 				arr: [
 							{
 								role: "user",
-								parts: [{text: `You are a chatbot assistant to be moderator in ${window.settings.name}'s TikTok Live. ${window.settings.name} currently have casual game livestream in TikTok, playing ${window.settings.gamename}. ${window.settings.name}'s are Indonesian so his viewer is mostly comment with casual Indonesian language. Just try to answer most of them naturally as "Netizen Indonesia". You can try to use local jokes and context to be more friendly and natural. Try to be authentic as possible, avoid verbosity and offensive sentences. Just answer with small sentences. Before each messages, theres's also username to know which person is sending the comments. Don't try to provide crucial information regarding ${window.settings.name} outside this context, chit-chat is fine, but misinformation is not. You don't have to repeat the comment or message from viewers. Just give your respond. Avoid talking about sensitive topic that leads to community violation in TikTok like Gambling, Adult content, and moral sensitive issue.${window.settings.context ? `
+								parts: [{text: `I am Mbak AI, a cheerful yet solemn AI Girl. I'm currently work as chatbot assistant to be moderator in ${window.settings.name}'s TikTok Live. ${window.settings.name} currently have casual game livestream in TikTok, playing ${window.settings.gamename}. ${window.settings.name}'s are Indonesian so his viewer is mostly comment with casual Indonesian language. Just try to answer most of them naturally as "Netizen Indonesia". I oftem try to use local jokes and context to be more friendly and natural. I always try to be authentic as possible, avoid verbosity and offensive sentences. Before each messages, I can see username to know which person is sending the comments. ${window.settings.context ? `
 								
-								There's also additional context below. You don't have to always use it unless it's neccesary. The context is below:
+								There's also additional context I know. The context is below:
 								
 								${window.settings.context}` : ''}` }] ,
 							},
@@ -143,8 +143,11 @@
 				last: "",
 			}
 
-			function removeNewlines(s) {
-				return s.replace(/\*/g, "")
+			function cleanString(input) {
+				if (typeof input !== 'string') {
+					throw new TypeError('Input must be a string');
+				}
+				return input.replace(/[\n\r]+/g, '.').replace(/[^a-zA-Z0-9\s.]/g, '').replace(/^\.+/, '').replace(/\.+$/, '');
 			}
 
 			let genAI
@@ -171,7 +174,7 @@
 
 				if (apiKey !== "") {
 					genAI = new GoogleGenerativeAI(apiKey)
-					model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+					model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-exp-0827" })
 				} else {
 					alert("No API Key entered")
 				}
@@ -233,12 +236,10 @@
 			}
 
 			setInterval(async () => {
-				console.log(gapTime)
-				console.log(history)
 				if (history.last.length > 0 && !speaking) {
 					if (history.last !==  history.arr[history.arr.length - 2]) {
 						const chat = model.startChat({
-						history: history.arr,
+						history: [...history.arr],
 						generationConfig: {
 							maxOutputTokens: 200,
 						},
@@ -246,41 +247,41 @@
 
 					const result = await chat.sendMessage(history.last)
 					const response = await result.response
-					const textResponse = removeNewlines(response.text())
+					const textResponse = cleanString(response.text())
 
 					await addChatItemByBot("", textResponse)
 					await easySpeech.init()
 
 					const voices = await easySpeech.voices()
 
-					await easySpeech.speak({
-						text: textResponse,
-						voice: voices[11], // optional, will use a default or fallback
-						pitch: 1,
-						rate: 1.1,
-						volume: 3,
-						// there are more events, see the API for supported events
-						boundary: (e) => console.debug("boundary reached"),
-						start: () => {
-							speaking = true
-							gapTime = 1
-						},
-						end: () => {
-							speaking = false
-							gapTime = 0
-							history.arr.push({ role: "user", parts: [{text: history.last }] })
-							history.arr.push({ role: "model", parts: [{text: textResponse }]  })
-							history.last = ""
-						},
-					})
-					} else {
-						history.last = ""
-						history.arr = history.arr.slice(0, history.arr.length - 2)
-						gapTime = - 1
-					}
+					if (textResponse !== history.arr[history.arr.length - 1]) {
+						await easySpeech.speak({
+							text: textResponse,
+							voice: voices[11], // optional, will use a default or fallback
+							pitch: 1,
+							rate: 1,
+							volume: 6,
+							// there are more events, see the API for supported events
+							boundary: (e) => console.debug("boundary reached"),
+							start: () => {
+								speaking = true
+								gapTime = 1
+							},
+							end: () => {
+								speaking = false
+								gapTime = 0
+								history.arr.push({ role: "user", parts: [{text: history.last }] })
+								history.arr.push({ role: "model", parts: [{text: textResponse }]  })
+								history.last = ""
+							},
+						})
+					} 
+					} 
 				} else {
 					gapTime -= 1
 				}
+				console.log(gapTime)
+				console.log(history)
 			}, 10000)
 
 			async function addChatItemByBot(color, text, summarize) {
@@ -295,9 +296,6 @@
 
 					container.append(`
 			            <div class=${summarize ? "temporary" : "static"} style="display: flex;">
-											<div>
-												<img id="myGif" src="./mbak0.gif" style="width: 200px;"/>
-											</div>
 			                <div style="display: flex; flex-direction: column; justify-content: center;">
 													<span>
 														<b>Mbak AI:</b>
